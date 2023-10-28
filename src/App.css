@@ -1,0 +1,10 @@
+body {
+    background-color: black;
+    color: lightgray;
+    font-family: Verdana, Geneva, Tahoma, sans-serif
+}
+h1 {
+    color: red;
+    font-weight: 900 !important;
+    text-align: center;
+}
