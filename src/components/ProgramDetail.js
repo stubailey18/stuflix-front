@@ -1,23 +1,25 @@
-import { useEffect, useState } from "react";
-import { useHistory, useRouteMatch } from "react-router";
+import { useContext, useEffect, useState } from "react";
+import { useRouteMatch } from "react-router";
 import { fetchProgramDetail } from "../services/ProgramService";
+import { AppStateContext } from "../App";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
 
-// ProgramDetail is now smart (it knows how to obtain the data)
-// This is so that the user can bookmark a given program and the component is not reliant on its parent
 export const ProgramDetail = () => {
 
     const [program, setProgram] = useState(null);
+    const [error, setError] = useState('');
+    const {state} = useContext(AppStateContext);
     const {params} = useRouteMatch();
+    const history = useHistory();
     
-    // whenever the URL params change we want to fetch again the program detail from the API
     useEffect(() => {
-        fetchProgramDetail(params.imdbID)
+        fetchProgramDetail(state.accessToken, params.imdbID)
             .then(program => setProgram(program))
-            .catch(error => console.log(error));
+            .catch(setError);
     }, [params]);
 
     if (program) {
-        const {Actors, Plot, Poster, Rated, Runtime, Title, Year, imdbRating} = program;
+        const {imdbRating, Actors, Plot, Poster, Rated, Ratings, Runtime, Title, Year} = program;
         return (
             <div className="row">
                 <div className="col-sm-4">
@@ -32,11 +34,23 @@ export const ProgramDetail = () => {
                         <span className="me-3">{Runtime}</span>
                     </small>
                     <p className="mt-4">{Plot}</p>
-                    <p className="mt-4">Starring {Actors}</p>
+                    <p className="mt-4">Starring {Actors.join(", ")}</p>
+                    {Ratings.map(({Source, Value}) => <p key={Source} className="mt-4">{Value} on {Source}</p>)}
+                    <button onClick={() => history.goBack()} className="btn btn-danger">Back to search results</button>
                 </div>
             </div>
         );
+    } else if (error) {
+        return ( 
+            <p className="text-center text-danger">
+                {error}&nbsp;
+                <span onClick={() => {
+                    setError('');
+                    history.goBack();
+                }} style={{cursor: 'pointer'}}>[X]</span>
+            </p>
+        );
     } else {
-        return <p>Loading...</p>;
+        return null;
     }
 }
